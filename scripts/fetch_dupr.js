@@ -72,6 +72,32 @@ async function run() {
     }
     console.log("Auth Headers captured successfully.");
 
+    console.log("Fetching logged-in user profile...");
+    const loggedInProfile = await page.evaluate(async (headersObj) => {
+      try {
+        const safeHeaders = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/plain, */*',
+          'Authorization': headersObj['authorization']
+        };
+        const res = await fetch('https://api.dupr.gg/user/v1.0/profile', {
+          method: 'GET',
+          headers: safeHeaders
+        });
+        return await res.json();
+      } catch (e) {
+        return null;
+      }
+    }, authHeaders);
+
+    let loggedInDuprId = null;
+    let loggedInRating = null;
+    if (loggedInProfile && loggedInProfile.status === 'SUCCESS' && loggedInProfile.result) {
+      loggedInDuprId = loggedInProfile.result.duprId;
+      loggedInRating = loggedInProfile.result.ratings?.doubles;
+      console.log(`Logged in as: ${loggedInProfile.result.fullName} (${loggedInDuprId}), Rating: ${loggedInRating}`);
+    }
+
     console.log("Fetching players from Supabase...");
     const { data: players, error } = await supabase
       .from('players')
@@ -84,8 +110,28 @@ async function run() {
 
     for (let i = 0; i < players.length; i++) {
       const player = players[i];
-      console.log(`[${i+1}/${players.length}] Fetching DUPR for ${player.full_name} (${player.dupr_id})...`);
+      console.log(`\n[${i+1}/${players.length}] Fetching DUPR for ${player.full_name} (${player.dupr_id})...`);
       
+      if (player.dupr_id === 'DDLDYX' || (loggedInDuprId && player.dupr_id === loggedInDuprId)) {
+        console.log(`  -> This is the logged-in user. Using profile rating.`);
+        if (loggedInRating && loggedInRating !== 'NR') {
+          const ratingNum = parseFloat(loggedInRating);
+          if (!isNaN(ratingNum)) {
+            console.log(`  -> New Rating: ${ratingNum}`);
+            const { error: updateErr } = await supabase
+              .from('players')
+              .update({ current_dupr: ratingNum })
+              .eq('id', player.id);
+            if (updateErr) console.error(`  -> Failed to update:`, updateErr.message);
+          } else {
+            console.log(`  -> Invalid rating format: ${loggedInRating}`);
+          }
+        } else {
+          console.log(`  -> Player is Unrated (NR) in profile`);
+        }
+        continue;
+      }
+
       const duprData = await page.evaluate(async (duprId, headersObj) => {
         try {
           // ensure we only send necessary headers to avoid browser security restrictions
