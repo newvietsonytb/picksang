@@ -11,7 +11,14 @@ const DATE_FILTERS = [
   { id: 'month', label: 'Tháng này' },
 ];
 
-export default function HomeTab({ currentPlayerId, currentPlayer, matches, onSaveMatch, onDeleteMatch }) {
+export default function HomeTab({ 
+  currentPlayerId, 
+  currentPlayer, 
+  matches, 
+  isLoading,
+  onSaveMatch, 
+  onDeleteMatch 
+}) {
   const [showForm, setShowForm] = useState(false);
   const [dateFilter, setDateFilter] = useState('today');
 
@@ -101,13 +108,18 @@ export default function HomeTab({ currentPlayerId, currentPlayer, matches, onSav
           </div>
         ))}
 
-        {filteredMatches.length === 0 && (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-text-muted text-sm font-medium">Đang tải dữ liệu...</p>
+          </div>
+        ) : filteredMatches.length === 0 ? (
           <div className="text-center py-16 flex flex-col items-center">
             <PickleballIcon className="w-16 h-16 text-text-muted/50 mb-4" />
             <p className="text-text-muted text-base font-medium">Chưa có trận nào</p>
             <p className="text-text-muted/60 text-sm mt-1">Nhấn nút phía trên để nhập trận đầu tiên!</p>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Form nhập trận */}

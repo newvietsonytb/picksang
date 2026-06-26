@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { getPlayerById } from './data/players';
 import IdentityModal from './components/IdentityModal';
@@ -7,14 +7,53 @@ import BottomNav from './components/BottomNav';
 import HomeTab from './components/HomeTab';
 import LeaderboardTab from './components/LeaderboardTab';
 import AdminTab from './components/AdminTab';
+import { supabase } from './lib/supabase';
 
 export default function App() {
   const [currentPlayerId, setCurrentPlayerId] = useLocalStorage('current_player_id', null);
-  const [matches, setMatches] = useLocalStorage('picksang_matches', []);
+  const [matches, setMatches] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
   const [showIdentityModal, setShowIdentityModal] = useState(false);
 
   const currentPlayer = getPlayerById(currentPlayerId);
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      const { data, error } = await supabase
+        .from('matches')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!error && data) {
+        setMatches(data);
+      }
+      setIsLoading(false);
+    };
+
+    fetchMatches();
+
+    const channel = supabase
+      .channel('public:matches')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setMatches(prev => {
+            // Prevent duplicate if optimistic update already added it
+            if (prev.some(m => m.id === payload.new.id)) return prev;
+            // Add and sort by date descending
+            const updated = [payload.new, ...prev];
+            return updated.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          });
+        } else if (payload.eventType === 'DELETE') {
+          setMatches(prev => prev.filter(m => m.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleIdentitySelect = useCallback((playerId) => {
     setCurrentPlayerId(playerId);
@@ -25,13 +64,29 @@ export default function App() {
     setShowIdentityModal(true);
   }, []);
 
-  const handleSaveMatch = useCallback((match) => {
+  const handleSaveMatch = useCallback(async (match) => {
+    // Optimistic UI update
     setMatches(prev => [match, ...prev]);
-  }, [setMatches]);
+    
+    const { error } = await supabase.from('matches').insert(match);
+    if (error) {
+      console.error('Error saving match:', error);
+      setMatches(prev => prev.filter(m => m.id !== match.id));
+      alert("Lỗi khi lưu dữ liệu lên máy chủ!");
+    }
+  }, []);
 
-  const handleDeleteMatch = useCallback((matchId) => {
+  const handleDeleteMatch = useCallback(async (matchId) => {
+    // Optimistic UI update
     setMatches(prev => prev.filter(m => m.id !== matchId));
-  }, [setMatches]);
+
+    const { error } = await supabase.from('matches').delete().eq('id', matchId);
+    if (error) {
+      console.error('Error deleting match:', error);
+      alert("Lỗi khi xoá dữ liệu trên máy chủ!");
+      // Optionally re-fetch matches here to rollback
+    }
+  }, []);
 
   // First time: show identity modal
   if (!currentPlayerId || !currentPlayer) {
@@ -51,6 +106,7 @@ export default function App() {
             currentPlayerId={currentPlayerId}
             currentPlayer={currentPlayer}
             matches={matches}
+            isLoading={isLoading}
             onSaveMatch={handleSaveMatch}
             onDeleteMatch={handleDeleteMatch}
           />

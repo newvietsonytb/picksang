@@ -99,21 +99,21 @@ export default function MatchForm({ currentPlayerId, matches, onSave, onClose })
   const ScoreStepper = ({ value, onChange, label }) => (
     <div className="flex flex-col items-center gap-1.5">
       <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">{label}</span>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => onChange(Math.max(0, value - 1))}
-          className="stepper-btn w-10 h-10 rounded-full bg-surface-elevated flex items-center justify-center border border-border hover:border-danger transition-colors shrink-0"
+          className="stepper-btn w-9 h-9 rounded-full bg-surface-elevated flex items-center justify-center border border-border hover:border-danger transition-colors shrink-0"
         >
           <Minus className="w-5 h-5 text-text-secondary" />
         </button>
-        <span key={value} className={`text-4xl font-extrabold min-w-[2.5ch] text-center tabular-nums ${value > 0 ? 'text-text-primary score-pop' : 'text-text-muted'}`}>
+        <span key={value} className={`text-4xl font-extrabold min-w-[2ch] text-center tabular-nums ${value > 0 ? 'text-text-primary score-pop' : 'text-text-muted'}`}>
           {value}
         </span>
         <button
           type="button"
           onClick={() => onChange(Math.min(99, value + 1))}
-          className="stepper-btn w-10 h-10 rounded-full bg-surface-elevated flex items-center justify-center border border-border hover:border-primary transition-colors shrink-0"
+          className="stepper-btn w-9 h-9 rounded-full bg-surface-elevated flex items-center justify-center border border-border hover:border-primary transition-colors shrink-0"
         >
           <Plus className="w-5 h-5 text-text-secondary" />
         </button>
@@ -188,9 +188,9 @@ export default function MatchForm({ currentPlayerId, matches, onSave, onClose })
           {/* Phần điểm */}
           <div className="glass-card rounded-2xl p-4 mb-6">
             <h3 className="text-base font-bold text-text-primary text-center mb-4">Tỉ số</h3>
-            <div className="flex items-start justify-center gap-3 md:gap-6">
+            <div className="flex items-start justify-center gap-2 md:gap-6">
               <ScoreStepper value={scoreT1} onChange={setScoreT1} label="Đội bạn" />
-              <div className="pt-7 text-2xl md:text-3xl font-bold text-text-muted">—</div>
+              <div className="pt-6 text-2xl md:text-3xl font-bold text-text-muted">—</div>
               <ScoreStepper value={scoreT2} onChange={setScoreT2} label="Đối thủ" />
             </div>
           </div>
@@ -199,9 +199,9 @@ export default function MatchForm({ currentPlayerId, matches, onSave, onClose })
         {/* Footer - Nút Lưu */}
         <div className="shrink-0 px-4 pb-5 pt-3 border-t border-border bg-surface" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}>
           {!validation.isValid && (
-            <div className="mb-3 space-y-1">
+            <div className="mb-4 bg-danger/10 border border-danger/20 rounded-xl p-3 space-y-1.5">
               {validation.errors.map((err, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-danger">
+                <div key={i} className="flex items-start gap-2 text-sm text-danger font-medium">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{err}</span>
                 </div>
