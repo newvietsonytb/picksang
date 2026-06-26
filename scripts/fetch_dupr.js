@@ -105,7 +105,14 @@ async function run() {
               offset: 0,
               query: duprId,
               exclude: [],
-              includeUnclaimedPlayers: true
+              includeUnclaimedPlayers: true,
+              filter: {
+                lat: null,
+                lng: null,
+                radiusInMeters: null,
+                rating: { maxRating: null, minRating: null },
+                locationText: ""
+              }
             })
           });
           return await res.json();
