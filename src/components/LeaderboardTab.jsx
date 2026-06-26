@@ -3,7 +3,7 @@ import { Trophy } from 'lucide-react';
 import { getPlayerById } from '../data/players';
 import Avatar from './Avatar';
 
-export default function LeaderboardTab({ matches }) {
+export default function LeaderboardTab({ matches, dbPlayers = [] }) {
   const leaderboard = useMemo(() => {
     const stats = {};
 
@@ -25,15 +25,22 @@ export default function LeaderboardTab({ matches }) {
       });
     });
 
-    return Object.entries(stats)
-      .map(([id, s]) => ({
-        player: getPlayerById(id),
-        ...s,
-        winRate: s.matches > 0 ? Math.round((s.wins / s.matches) * 100) : 0,
-      }))
-      .filter(s => s.player)
-      .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins);
-  }, [matches]);
+    return dbPlayers
+      .map(p => {
+        const s = stats[p.id] || { wins: 0, losses: 0, matches: 0 };
+        return {
+          player: p,
+          ...s,
+          winRate: s.matches > 0 ? Math.round((s.wins / s.matches) * 100) : 0,
+        };
+      })
+      .sort((a, b) => {
+        const duprA = a.player.current_dupr || 0;
+        const duprB = b.player.current_dupr || 0;
+        if (duprB !== duprA) return duprB - duprA;
+        return b.winRate - a.winRate || b.wins - a.wins;
+      });
+  }, [matches, dbPlayers]);
 
   // Tìm badges
   const badges = useMemo(() => {
@@ -123,10 +130,17 @@ export default function LeaderboardTab({ matches }) {
                   {entry.matches} trận · {entry.wins}T - {entry.losses}B
                 </div>
               </div>
-              <div className={`text-2xl font-extrabold tabular-nums ${
-                entry.winRate >= 60 ? 'text-win' : entry.winRate >= 40 ? 'text-accent' : 'text-lose'
-              }`}>
-                {entry.winRate}%
+              <div className="flex flex-col items-end">
+                <div className={`text-xl font-extrabold tabular-nums ${
+                  entry.player.current_dupr ? 'text-accent' : 'text-text-muted'
+                }`}>
+                  {entry.player.current_dupr ? entry.player.current_dupr.toFixed(3) : 'NR'}
+                </div>
+                <div className={`text-sm tabular-nums font-medium ${
+                  entry.winRate >= 60 ? 'text-win' : entry.winRate >= 40 ? 'text-text-secondary' : 'text-lose'
+                }`}>
+                  {entry.winRate}% thắng
+                </div>
               </div>
             </div>
           ))}

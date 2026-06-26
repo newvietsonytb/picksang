@@ -3,7 +3,7 @@ import { PLAYERS, getPlayerById } from '../data/players';
 import Avatar from './Avatar';
 import dayjs from 'dayjs';
 
-export default function AdminTab({ currentPlayer, matches }) {
+export default function AdminTab({ currentPlayer, matches, dbPlayers = [] }) {
   const isAdmin = currentPlayer?.is_admin === true;
 
   const handleExportCSV = () => {
@@ -13,37 +13,41 @@ export default function AdminTab({ currentPlayer, matches }) {
     }
 
     const headers = [
-      "Match Date",
+      "Date",
+      "Match Format",
+      "Player 1 DUPR ID",
       "Player 1 Name",
-      "Player 1 DUPR",
+      "Player 2 DUPR ID",
       "Player 2 Name",
-      "Player 2 DUPR",
-      "Opponent 1 Name",
-      "Opponent 1 DUPR",
-      "Opponent 2 Name",
-      "Opponent 2 DUPR",
-      "Player 1 Score",
-      "Opponent 1 Score"
+      "Player 3 DUPR ID",
+      "Player 3 Name",
+      "Player 4 DUPR ID",
+      "Player 4 Name",
+      "Team 1 Score",
+      "Team 2 Score"
     ];
 
+    const getPlayer = (id) => dbPlayers.find(p => p.id === id) || { full_name: '', dupr_id: '' };
+
     const rows = matches.map(match => {
-      const t1p1 = getPlayerById(match.team1_p1) || {};
-      const t1p2 = getPlayerById(match.team1_p2) || {};
-      const t2p1 = getPlayerById(match.team2_p1) || {};
-      const t2p2 = getPlayerById(match.team2_p2) || {};
+      const t1p1 = getPlayer(match.team1_p1);
+      const t1p2 = getPlayer(match.team1_p2);
+      const t2p1 = getPlayer(match.team2_p1);
+      const t2p2 = getPlayer(match.team2_p2);
 
       const matchDate = dayjs(match.created_at).format('MM/DD/YYYY');
 
       return [
         matchDate,
-        t1p1.full_name || '',
+        "Doubles",
         t1p1.dupr_id || '',
-        t1p2.full_name || '',
+        t1p1.full_name || '',
         t1p2.dupr_id || '',
-        t2p1.full_name || '',
+        t1p2.full_name || '',
         t2p1.dupr_id || '',
-        t2p2.full_name || '',
+        t2p1.full_name || '',
         t2p2.dupr_id || '',
+        t2p2.full_name || '',
         match.score_team1,
         match.score_team2
       ].map(val => `"${val}"`).join(',');
@@ -82,10 +86,10 @@ export default function AdminTab({ currentPlayer, matches }) {
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           <Users className="w-6 h-6 text-text-secondary" />
-          <h3 className="text-lg font-bold text-text-primary">Danh sách thành viên ({PLAYERS.length})</h3>
+          <h3 className="text-lg font-bold text-text-primary">Danh sách thành viên ({dbPlayers.length})</h3>
         </div>
         <div className="space-y-2">
-          {PLAYERS.map(player => (
+          {dbPlayers.map(player => (
             <div
               key={player.id}
               className="glass-card rounded-xl p-3.5 flex items-center gap-3"
@@ -96,7 +100,7 @@ export default function AdminTab({ currentPlayer, matches }) {
                   {player.full_name}
                 </div>
                 <div className="text-sm text-text-muted">
-                  {player.dupr_id ? `DUPR: ${player.dupr_id}` : 'Chưa có DUPR ID'}
+                  {player.dupr_id ? `DUPR: ${player.current_dupr || 'NR'}` : 'Chưa có DUPR ID'}
                   {player.is_admin && ' · 👑 Admin'}
                 </div>
               </div>

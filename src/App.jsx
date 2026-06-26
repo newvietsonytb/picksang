@@ -12,6 +12,7 @@ import { supabase } from './lib/supabase';
 export default function App() {
   const [currentPlayerId, setCurrentPlayerId] = useLocalStorage('current_player_id', null);
   const [matches, setMatches] = useState([]);
+  const [dbPlayers, setDbPlayers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
   const [showIdentityModal, setShowIdentityModal] = useState(false);
@@ -19,19 +20,26 @@ export default function App() {
   const currentPlayer = getPlayerById(currentPlayerId);
 
   useEffect(() => {
-    const fetchMatches = async () => {
-      const { data, error } = await supabase
+    const fetchData = async () => {
+      // Fetch matches
+      const { data: matchesData } = await supabase
         .from('matches')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (!error && data) {
-        setMatches(data);
-      }
+      if (matchesData) setMatches(matchesData);
+
+      // Fetch players
+      const { data: playersData } = await supabase
+        .from('players')
+        .select('*');
+        
+      if (playersData) setDbPlayers(playersData);
+      
       setIsLoading(false);
     };
 
-    fetchMatches();
+    fetchData();
 
     const channel = supabase
       .channel('public:matches')
@@ -112,10 +120,10 @@ export default function App() {
           />
         )}
         {activeTab === 'leaderboard' && (
-          <LeaderboardTab matches={matches} />
+          <LeaderboardTab matches={matches} dbPlayers={dbPlayers} />
         )}
         {activeTab === 'admin' && (
-          <AdminTab currentPlayer={currentPlayer} matches={matches} />
+          <AdminTab currentPlayer={currentPlayer} matches={matches} dbPlayers={dbPlayers} />
         )}
       </main>
 
