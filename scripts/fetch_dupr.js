@@ -32,6 +32,16 @@ async function run() {
   await page.setViewport({ width: 1280, height: 800 });
   await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
 
+  let authHeaders = null;
+  await page.setRequestInterception(true);
+  page.on('request', request => {
+    const headers = request.headers();
+    if (request.url().includes('api.dupr.gg') && headers['authorization'] && headers['authorization'].length > 20) {
+      authHeaders = headers;
+    }
+    request.continue();
+  });
+
   try {
     console.log("Navigating to DUPR Login...");
     await page.goto('https://dashboard.dupr.com/login', { waitUntil: 'networkidle2' });
@@ -49,6 +59,19 @@ async function run() {
     await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() => console.log("Navigation timeout, proceeding anyway"));
     await delay(3000); 
 
+    console.log("Waiting to capture Auth Headers...");
+    let retries = 0;
+    while (!authHeaders && retries < 15) {
+      await delay(1000);
+      retries++;
+    }
+
+    if (!authHeaders) {
+      console.error("Failed to capture Auth Headers. Exiting.");
+      process.exit(1);
+    }
+    console.log("Auth Headers captured successfully.");
+
     console.log("Fetching players from Supabase...");
     const { data: players, error } = await supabase
       .from('players')
@@ -63,13 +86,20 @@ async function run() {
       const player = players[i];
       console.log(`[${i+1}/${players.length}] Fetching DUPR for ${player.full_name} (${player.dupr_id})...`);
       
-      const duprData = await page.evaluate(async (duprId) => {
+      const duprData = await page.evaluate(async (duprId, headersObj) => {
         try {
+          // ensure we only send necessary headers to avoid browser security restrictions
+          const safeHeaders = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/plain, */*',
+            'Authorization': headersObj['authorization']
+          };
+          if (headersObj['x-dupr-version']) safeHeaders['x-dupr-version'] = headersObj['x-dupr-version'];
+          if (headersObj['dupr-version']) safeHeaders['dupr-version'] = headersObj['dupr-version'];
+
           const res = await fetch('https://api.dupr.gg/player/v1.0/search', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
+            headers: safeHeaders,
             body: JSON.stringify({
               limit: 10,
               offset: 0,
@@ -82,7 +112,7 @@ async function run() {
         } catch (e) {
           return { error: e.message };
         }
-      }, player.dupr_id);
+      }, player.dupr_id, authHeaders);
 
       if (duprData && duprData.status === 'SUCCESS' && duprData.result && duprData.result.hits.length > 0) {
         const hit = duprData.result.hits[0];
@@ -111,7 +141,7 @@ async function run() {
       }
 
       if (i < players.length - 1) {
-        const sleepTime = 5000 + Math.random() * 2000; 
+        const sleepTime = 15000 + Math.random() * 10000; // 15s to 25s
         console.log(`  Waiting ${(sleepTime/1000).toFixed(1)}s...`);
         await delay(sleepTime);
       }

@@ -1,0 +1,33 @@
+name: Fetch DUPR Ratings
+
+on:
+  schedule:
+    # Runs at 17:00 UTC every day, which is 00:00 midnight GMT+7 (Vietnam time)
+    - cron: '0 17 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  fetch-dupr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Fetch DUPR script
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DUPR_EMAIL: ${{ secrets.DUPR_EMAIL }}
+          DUPR_PASSWORD: ${{ secrets.DUPR_PASSWORD }}
+        run: npm run fetch-dupr
