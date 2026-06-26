@@ -70,17 +70,7 @@ export default function AdminTab({ currentPlayer, matches, dbPlayers = [] }) {
         <h2 className="text-xl font-extrabold text-text-primary">Quản lý</h2>
       </div>
 
-      {!isAdmin && (
-        <div className="glass-card rounded-2xl p-6 text-center mb-6">
-          <Lock className="w-12 h-12 text-text-muted mx-auto mb-3" />
-          <p className="text-base text-text-muted font-medium">
-            Chỉ Admin mới có thể thao tác tại đây
-          </p>
-          <p className="text-sm text-text-muted/60 mt-1">
-            Liên hệ Trang Vũ, Vinh Le hoặc Viet Son để được cấp quyền
-          </p>
-        </div>
-      )}
+
 
       {/* Danh sách thành viên */}
       <div className="mb-6">
@@ -89,7 +79,11 @@ export default function AdminTab({ currentPlayer, matches, dbPlayers = [] }) {
           <h3 className="text-lg font-bold text-text-primary">Danh sách thành viên ({dbPlayers.length})</h3>
         </div>
         <div className="space-y-2">
-          {dbPlayers.map(player => (
+          {[...dbPlayers].sort((a, b) => {
+            const aScore = parseFloat(a.current_dupr) || 0;
+            const bScore = parseFloat(b.current_dupr) || 0;
+            return bScore - aScore;
+          }).map(player => (
             <div
               key={player.id}
               className="glass-card rounded-xl p-3.5 flex items-center gap-3"
@@ -116,13 +110,8 @@ export default function AdminTab({ currentPlayer, matches, dbPlayers = [] }) {
 
       {/* Nút xuất CSV */}
       <button
-        disabled={!isAdmin}
         onClick={handleExportCSV}
-        className={`w-full py-4 rounded-2xl text-base font-bold flex items-center justify-center gap-2 transition-all ${
-          isAdmin
-            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 active:scale-[0.98]'
-            : 'bg-surface-elevated text-text-muted cursor-not-allowed'
-        }`}
+        className="w-full py-4 rounded-2xl text-base font-bold flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 active:scale-[0.98]"
       >
         <Download className="w-6 h-6" />
         TẢI FILE CSV CHUẨN DUPR
