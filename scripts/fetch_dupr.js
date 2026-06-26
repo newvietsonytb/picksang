@@ -38,9 +38,9 @@ async function run() {
 
     // Wait for email input
     console.log("Entering credentials...");
-    await page.waitForSelector('input[type="email"]');
-    await page.type('input[type="email"]', DUPR_EMAIL, { delay: 50 });
-    await page.type('input[type="password"]', DUPR_PASSWORD, { delay: 50 });
+    await page.waitForSelector('input[name="email"]');
+    await page.type('input[name="email"]', DUPR_EMAIL, { delay: 50 });
+    await page.type('input[name="password"]', DUPR_PASSWORD, { delay: 50 });
     
     // Click login button
     await page.click('button[type="submit"]');
