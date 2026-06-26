@@ -93,8 +93,8 @@ async function run() {
     let loggedInDuprId = null;
     let loggedInRating = null;
     if (loggedInProfile && loggedInProfile.status === 'SUCCESS' && loggedInProfile.result) {
-      loggedInDuprId = loggedInProfile.result.duprId;
-      loggedInRating = loggedInProfile.result.ratings?.doubles;
+      loggedInDuprId = loggedInProfile.result.referralCode || 'DDLDYX';
+      loggedInRating = loggedInProfile.result.stats?.doubles;
       console.log(`Logged in as: ${loggedInProfile.result.fullName} (${loggedInDuprId}), Rating: ${loggedInRating}`);
     }
 

@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "fetch-dupr": "node scripts/log_dupr_api.js"
+    "fetch-dupr": "node scripts/fetch_dupr.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
