@@ -1,0 +1,32 @@
+name: Daily DUPR Fetch
+
+on:
+  schedule:
+    # 20:00 UTC = 03:00 AM VN time
+    - cron: '0 20 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  fetch-dupr:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Run Puppeteer Script
+      run: npm run fetch-dupr
+      env:
+        VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        DUPR_EMAIL: ${{ secrets.DUPR_EMAIL }}
+        DUPR_PASSWORD: ${{ secrets.DUPR_PASSWORD }}
