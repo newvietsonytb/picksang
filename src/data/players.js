@@ -26,7 +26,7 @@ export const PLAYERS = [
   { id: 'p_25', full_name: 'Doanh Nguyễn', dupr_id: '4QNZ56', current_dupr: 2.896, is_admin: false },
   { id: 'p_26', full_name: 'Doan Khoi Thai', dupr_id: 'RDQEWD', current_dupr: 3.18, is_admin: false },
   { id: 'p_27', full_name: 'Xu Hà', dupr_id: 'Y4KPW4', current_dupr: 3.171, is_admin: false },
-  { id: 'p_28', full_name: 'Viet Son', dupr_id: 'DDLDYX', current_dupr: 3.226, is_admin: true },
+  { id: 'p_28', full_name: 'Viet Son', dupr_id: 'DDLDYX', current_dupr: 3.226, is_admin: false },
   { id: 'p_29', full_name: 'Nguyễn Thanh Luân', dupr_id: '57PGWL', current_dupr: 3.121, is_admin: false },
   { id: 'p_30', full_name: 'Tam Văn', dupr_id: 'R42R2Z', current_dupr: 2.718, is_admin: false },
   { id: 'p_31', full_name: 'Tú Ngân Hà Hồ', dupr_id: '4EZRM6', current_dupr: 3.082, is_admin: false },
